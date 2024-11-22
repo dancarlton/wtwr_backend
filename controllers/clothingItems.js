@@ -75,11 +75,11 @@ module.exports.dislikeItem = (req, res) => {
   )
     .then((updatedItem) => {
       if (!updatedItem) {
-        return res.status(404).send({ message: "Item not found" });
+        return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
       return res.send(updatedItem);
     })
     .catch((err) => {
-      res.status(500).send({ message: err.message });
+      res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
     });
 };
