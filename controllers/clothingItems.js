@@ -49,27 +49,29 @@ module.exports.deleteClothingItem = (req, res) => {
 };
 
 // PUT /items/:itemId/likes — like an item
-module.exports.likeItem = (req, res) =>
-
+module.exports.likeItem = (req, res) => {
+  console.log(req.params);
   ClothingItem.findByIdAndUpdate(
-    req.params.itemId,
+    req.params.id,
     { $addToSet: { likes: req.user._id } },
     { new: true }
   )
-    .then((updatedItem) => res.send(updatedItem))
-    .catch((err) => {
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: err.message });
+    .then((updatedItem) => {
+      if (!updatedItem) {
+        return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
-      return res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
+
+      return res.send(updatedItem);
+    })
+    .catch((err) => {
+      res.status(BAD_REQUEST).send({ message: err.message });
     });
-
-
+};
 
 // DELETE /items/:itemId/likes — unlike an item
 module.exports.dislikeItem = (req, res) => {
   ClothingItem.findByIdAndUpdate(
-    req.params.itemId,
+    req.params.id,
     { $pull: { likes: req.user._id } },
     { new: true }
   )
@@ -80,6 +82,6 @@ module.exports.dislikeItem = (req, res) => {
       return res.send(updatedItem);
     })
     .catch((err) => {
-      res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
+      res.status(BAD_REQUEST).send({ message: err.message });
     });
 };
