@@ -8,19 +8,17 @@ const {
 // GET /items
 module.exports.getClothingItems = (req, res) => {
   ClothingItem.find({})
-    .orFail()
     .then((clothingItem) => res.send({ data: clothingItem }))
-    .catch((err) => {
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: err.message });
-      }
-      return res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
+    .catch(() => {
+      res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occured on the server." });
     });
 };
 
 // POST /items
 module.exports.createClothingItem = (req, res) => {
-  console.log(req.user._id);
+  // console.log(req.user._id);
 
   const { name, weather, imageUrl } = req.body;
 
@@ -30,7 +28,9 @@ module.exports.createClothingItem = (req, res) => {
       if (err.name === "ValidationError") {
         res.status(BAD_REQUEST).send({ message: err.message });
       } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
+        res
+          .status(INTERNAL_SERVER_ERROR)
+          .send({ message: "An error has occured on the server." });
       }
     });
 };
@@ -41,18 +41,22 @@ module.exports.deleteClothingItem = (req, res) => {
     .orFail()
     .then((clothingItem) => res.send({ data: clothingItem }))
     .catch((err) => {
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: err.message });
+      if (err.message === "DocumentNotFoundError") {
+        return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
-      return res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
+      if (err.name === "CastError") {
+        return res.status(BAD_REQUEST).send({ message: "Invalid ID format" });
+      }
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
 // PUT /items/:itemId/likes — like an item
 module.exports.likeItem = (req, res) => {
-  console.log(req.params);
   ClothingItem.findByIdAndUpdate(
-    req.params.id,
+    req.params.itemId,
     { $addToSet: { likes: req.user._id } },
     { new: true }
   )
@@ -60,11 +64,15 @@ module.exports.likeItem = (req, res) => {
       if (!updatedItem) {
         return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
-
-      return res.send(updatedItem);
+      return res.send({ data: updatedItem });
     })
     .catch((err) => {
-      res.status(BAD_REQUEST).send({ message: err.message });
+      if (err.name === "CastError") {
+        return res.status(BAD_REQUEST).send({ message: "Invalid ID format" });
+      }
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -82,6 +90,8 @@ module.exports.dislikeItem = (req, res) => {
       return res.send(updatedItem);
     })
     .catch((err) => {
-      res.status(BAD_REQUEST).send({ message: err.message });
+      if (err.name === "CastError") {
+        res.status(BAD_REQUEST).send({ message: err.message });
+      }
     });
 };

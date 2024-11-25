@@ -8,13 +8,14 @@ const {
 // GET /users
 module.exports.getUsers = (req, res) => {
   User.find({})
-    .orFail()
     .then((users) => res.send({ data: users }))
     .catch((err) => {
-      if (err.name === "DocumentNotFoundError"){
-        return res.status(NOT_FOUND).send({ message: err.message })
+      if (err.name === "DocumentNotFoundError") {
+        return res.status(NOT_FOUND).send({ message: err.message });
       }
-      return res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server" });
     });
 };
 
@@ -23,14 +24,11 @@ module.exports.getUser = (req, res) => {
   User.findById(req.params.id)
     .orFail()
     .then((user) => {
-      if (!user) {
-        return res.status(NOT_FOUND).send({ message: "User not found" });
-      }
-      return res.send({ data: user });
+      res.send({ data: user });
     })
     .catch((err) => {
-      if (err.name === "DocumentNotFoundError"){
-        return res.status(NOT_FOUND).send({ message: err.message })
+      if (err.name === "DocumentNotFoundError") {
+        return res.status(NOT_FOUND).send({ message: err.message });
       }
       return res.status(BAD_REQUEST).send({ message: err.message });
     });
@@ -46,7 +44,9 @@ module.exports.createUser = (req, res) => {
       if (err.name === "ValidationError") {
         res.status(BAD_REQUEST).send({ message: err.message });
       } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: err.message });
+        res
+          .status(INTERNAL_SERVER_ERROR)
+          .send({ message: "An error has occurred on the server" });
       }
     });
 };
