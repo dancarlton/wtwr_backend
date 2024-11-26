@@ -9,11 +9,8 @@ const {
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch((err) => {
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: err.message });
-      }
-      return res
+    .catch(() => {
+      res
         .status(INTERNAL_SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });
@@ -24,13 +21,16 @@ module.exports.getUser = (req, res) => {
   User.findById(req.params.id)
     .orFail()
     .then((user) => {
-      res.send({ data: user });
+      res.status(200).send({ data: user });
     })
     .catch((err) => {
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: err.message });
+        return res.status(404).send({ message: "User not found" });
       }
-      return res.status(BAD_REQUEST).send({ message: err.message });
+      if (err.name === "CastError") {
+        return res.status(400).send({ message: "Invalid ID format" });
+      }
+      res.status(500).send({ message: "An error occurred on the server" });
     });
 };
 

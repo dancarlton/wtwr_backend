@@ -41,7 +41,7 @@ module.exports.deleteClothingItem = (req, res) => {
     .orFail()
     .then((clothingItem) => res.send({ data: clothingItem }))
     .catch((err) => {
-      if (err.message === "DocumentNotFoundError") {
+      if (err.name === "DocumentNotFoundError") {
         return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
       if (err.name === "CastError") {
@@ -56,7 +56,7 @@ module.exports.deleteClothingItem = (req, res) => {
 // PUT /items/:itemId/likes — like an item
 module.exports.likeItem = (req, res) => {
   ClothingItem.findByIdAndUpdate(
-    req.params.itemId,
+    req.params.id,
     { $addToSet: { likes: req.user._id } },
     { new: true }
   )
@@ -93,5 +93,8 @@ module.exports.dislikeItem = (req, res) => {
       if (err.name === "CastError") {
         res.status(BAD_REQUEST).send({ message: err.message });
       }
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };

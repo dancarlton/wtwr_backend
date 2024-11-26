@@ -26,13 +26,14 @@ app.use((req, res, next) => {
   };
   next();
 });
-app.use((req, res) => {
-  res.status(NOT_FOUND).send({ message: "Requested resource not found" });
-});
 
 // routes
 app.use("/users", userRouter);
 app.use("/items", clothingItemRouter);
+
+app.use((req, res) => {
+  res.status(NOT_FOUND).send({ message: "Requested resource not found" });
+});
 
 // launch PORT
 app.listen(PORT, () => {
