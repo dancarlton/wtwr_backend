@@ -20,17 +20,17 @@ module.exports.getUsers = (req, res) => {
 module.exports.getUser = (req, res) => {
   User.findById(req.params.id)
     .orFail()
-    .then((user) => {
-      res.status(200).send({ data: user });
-    })
+    .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === "DocumentNotFoundError") {
-        return res.status(404).send({ message: "User not found" });
+        return res.status(NOT_FOUND).send({ message: "User not found" });
       }
       if (err.name === "CastError") {
-        return res.status(400).send({ message: "Invalid ID format" });
+        return res.status(BAD_REQUEST).send({ message: "Invalid ID format" });
       }
-      res.status(500).send({ message: "An error occurred on the server" });
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error occurred on the server" });
     });
 };
 
