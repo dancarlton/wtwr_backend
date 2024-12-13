@@ -37,7 +37,7 @@ module.exports.createClothingItem = (req, res) => {
 
 // DELETE /items/:id
 module.exports.deleteClothingItem = (req, res) => {
-  ClothingItem.findByIdAndDelete(req.params.id)
+  ClothingItem.findByIdAndDelete(req.user._id)
     .orFail()
     .then((clothingItem) => res.send({ data: clothingItem }))
     .catch((err) => {
