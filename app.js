@@ -1,16 +1,15 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const routes = require("./routes")
 
-const userRouter = require("./routes/users");
-const clothingItemRouter = require("./routes/clothingItems");
-const { login, createUser } = require("./controllers/users");
-
-const app = express();
 const { PORT = 3001 } = process.env;
-
 const { NOT_FOUND } = require("./utils/errors");
 
+// initialize express app
+const app = express();
+
+// connect to MongoDB
 mongoose
   .connect("mongodb://127.0.0.1:27017/wtwr_db")
   .then(() => {
@@ -19,22 +18,18 @@ mongoose
   .catch(console.error);
 
 // middleware
+app.use(cors());
 app.use(express.json());
 
 // routes
-app.use("/users", userRouter);
-app.use("/items", clothingItemRouter);
+app.use(routes);
 
+// handle invalid routes
 app.use((req, res) => {
   res.status(NOT_FOUND).send({ message: "Requested resource not found" });
 });
 
-// launch PORT
+// launch server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
-app.post("/signin", login);
-app.post("/signup", createUser);
-
-app.use(cors());

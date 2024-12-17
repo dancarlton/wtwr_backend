@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
@@ -6,20 +6,12 @@ const {
   BAD_REQUEST,
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
+  SUCCESS,
+  CONFLICT,
+  UNAUTHORIZED,
 } = require("../utils/errors");
 
 const { JWT_SECRET } = require("../utils/config");
-
-// GET /users
-module.exports.getUsers = (req, res) => {
-  User.find({})
-    .then((users) => res.send({ data: users }))
-    .catch(() => {
-      res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
-    });
-};
 
 // GET /users/me
 module.exports.getCurrentUser = (req, res) => {
@@ -45,33 +37,35 @@ module.exports.createUser = (req, res) => {
 
   User.findOne({ email })
     .then((user) => {
-      if (!user) {
-        throw new Error("User doesn't exist");
+      if (user) {
+        const error = new Error()
+        error.code = 11000
+        throw error;
       }
-
-      return bcrypt.compare(password, user.password);
+      return User.create({ name, avatar, email, password });
     })
-    .then((matched) => {
-      if (!matched) {
-        throw new Error("Incorrect email or password");
+    .then((user) =>
+      res.status(SUCCESS).send({
+        data: {
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          _id: user._id,
+        },
+      })
+    )
+    .catch((err) => {
+      if(err.code === 11000){
+
+        return res.status(CONFLICT).send({ message: "User already exists" });
       }
-
-      return res.send({ message: "Everything good!" });
-    })
-    .catch((err) => {
-      res.status(401).send({ message: err.message });
-    });
-
-  User.create({ name, avatar, email, password })
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
       if (err.name === "ValidationError") {
-        res.status(BAD_REQUEST).send({ message: err.message });
-      } else {
-        res
+        return res.status(BAD_REQUEST).send({ message: err.message });
+      }
+        return res
           .status(INTERNAL_SERVER_ERROR)
           .send({ message: "An error has occurred on the server" });
-      }
+
     });
 };
 
@@ -88,7 +82,7 @@ module.exports.login = (req, res) => {
       res.send(token);
     })
     .catch((err) => {
-      res.status(401).send({ message: err.message });
+      res.status(UNAUTHORIZED).send({ message: err.message });
     });
 };
 

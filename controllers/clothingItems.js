@@ -3,6 +3,8 @@ const {
   BAD_REQUEST,
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
+  FORBIDDEN,
+  SUCCESS,
 } = require("../utils/errors");
 
 // GET /items
@@ -37,13 +39,28 @@ module.exports.createClothingItem = (req, res) => {
 
 // DELETE /items/:id
 module.exports.deleteClothingItem = (req, res) => {
-  ClothingItem.findByIdAndDelete(req.user._id)
-    .orFail()
-    .then((clothingItem) => res.send({ data: clothingItem }))
-    .catch((err) => {
-      if (err.name === "DocumentNotFoundError") {
+  const { id } = req.params;
+  const userId = req.user._id;
+
+  ClothingItem.findById(id)
+    .then((item) => {
+      if (!item) {
         return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
+
+      // check ownership of item
+      if (item.owner.toString() !== userId) {
+        return res
+          .status(FORBIDDEN)
+          .send({ message: "You are not authorized to delete this item" });
+      }
+
+      // if the user owns the item, delete it
+      return ClothingItem.deleteOne({ _id: id }).then(() => {
+        res.status(SUCCESS).send({ message: "Item successfully deleted" });
+      });
+    })
+    .catch((err) => {
       if (err.name === "CastError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid ID format" });
       }
