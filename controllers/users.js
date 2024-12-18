@@ -1,5 +1,5 @@
-
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
 const User = require("../models/user");
 const {
@@ -38,12 +38,15 @@ module.exports.createUser = (req, res) => {
   User.findOne({ email })
     .then((user) => {
       if (user) {
-        const error = new Error()
-        error.code = 11000
+        const error = new Error();
+        error.code = 11000;
         throw error;
       }
-      return User.create({ name, avatar, email, password });
+      return bcrypt.hash(password, 10);
     })
+    .then((hashedPassword) =>
+      User.create({ name, avatar, email, password: hashedPassword })
+    )
     .then((user) =>
       res.status(SUCCESS).send({
         data: {
@@ -55,17 +58,15 @@ module.exports.createUser = (req, res) => {
       })
     )
     .catch((err) => {
-      if(err.code === 11000){
-
+      if (err.code === 11000) {
         return res.status(CONFLICT).send({ message: "User already exists" });
       }
       if (err.name === "ValidationError") {
         return res.status(BAD_REQUEST).send({ message: err.message });
       }
-        return res
-          .status(INTERNAL_SERVER_ERROR)
-          .send({ message: "An error has occurred on the server" });
-
+      return res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "An error has occurred on the server" });
     });
 };
 
@@ -73,16 +74,28 @@ module.exports.createUser = (req, res) => {
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res
+      .status(BAD_REQUEST)
+      .send({ message: "The password and email fields are required" });
+  }
+
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
 
-      res.send(token);
+      res.send({ token });
     })
     .catch((err) => {
-      res.status(UNAUTHORIZED).send({ message: err.message });
+      if (err.message === "Incorrect email or password") {
+        res.status(UNAUTHORIZED).send({ message: err.message });
+      } else {
+        res
+          .status(INTERNAL_SERVER_ERROR)
+          .send({ message: "Internal Server Error" });
+      }
     });
 };
 
@@ -96,6 +109,7 @@ module.exports.updateProfile = (req, res) => {
     { name, avatar },
     { new: true, runValidators: true }
   )
+    .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === "DocumentNotFoundError") {

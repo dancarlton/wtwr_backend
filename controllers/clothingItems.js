@@ -108,7 +108,7 @@ module.exports.dislikeItem = (req, res) => {
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        res.status(BAD_REQUEST).send({ message: err.message });
+        return res.status(BAD_REQUEST).send({ message: err.message });
       }
       return res
         .status(INTERNAL_SERVER_ERROR)
