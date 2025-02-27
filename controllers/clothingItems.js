@@ -81,7 +81,7 @@ module.exports.likeItem = (req, res) => {
       if (!updatedItem) {
         return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
-      return res.send({ data: updatedItem });
+      return res.send(updatedItem );
     })
     .catch((err) => {
       if (err.name === "CastError") {
