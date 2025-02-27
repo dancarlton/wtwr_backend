@@ -17,7 +17,7 @@ const { JWT_SECRET } = require("../utils/config");
 module.exports.getCurrentUser = (req, res) => {
   User.findById(req.user._id)
     .orFail()
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === "DocumentNotFoundError") {
         return res.status(NOT_FOUND).send({ message: "User not found" });
@@ -86,7 +86,7 @@ module.exports.login = (req, res) => {
         expiresIn: "7d",
       });
 
-      res.send({ token });
+      res.send({ token, user: {name: user.name, email: user.email, avatar: user.avatar, _id: user._id} });
     })
     .catch((err) => {
       if (err.message === "Incorrect email or password") {

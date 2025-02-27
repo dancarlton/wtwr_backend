@@ -10,7 +10,7 @@ const {
 // GET /items
 module.exports.getClothingItems = (req, res) => {
   ClothingItem.find({})
-    .then((clothingItem) => res.send({ data: clothingItem }))
+    .then((clothingItem) => res.send(clothingItem))
     .catch(() => {
       res
         .status(INTERNAL_SERVER_ERROR)
