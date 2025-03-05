@@ -25,7 +25,7 @@ module.exports.createClothingItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
 
   ClothingItem.create({ name, weather, imageUrl, owner: req.user._id })
-    .then((clothingItem) => res.send({ data: clothingItem }))
+    .then((clothingItem) => res.send( clothingItem ))
     .catch((err) => {
       if (err.name === "ValidationError") {
         res.status(BAD_REQUEST).send({ message: err.message });
