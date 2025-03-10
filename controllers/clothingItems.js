@@ -1,77 +1,65 @@
+const BadRequestError = require("../errors/BadRequest");
+const NotFoundError = require("../errors/NotFound");
+const ForbiddenError = require("../errors/Forbidden");
 const ClothingItem = require("../models/clothingItem");
-const {
-  BAD_REQUEST,
-  NOT_FOUND,
-  INTERNAL_SERVER_ERROR,
-  FORBIDDEN,
-  SUCCESS,
-} = require("../utils/errors");
+
 
 // GET /items
-module.exports.getClothingItems = (req, res) => {
+module.exports.getClothingItems = (req, res, next) => {
   ClothingItem.find({})
     .then((clothingItem) => res.send(clothingItem))
-    .catch(() => {
-      res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occured on the server." });
-    });
+    .catch(next);
 };
 
 // POST /items
-module.exports.createClothingItem = (req, res) => {
+module.exports.createClothingItem = (req, res, next) => {
   // console.log(req.user._id);
 
   const { name, weather, imageUrl } = req.body;
 
   ClothingItem.create({ name, weather, imageUrl, owner: req.user._id })
-    .then((clothingItem) => res.send( clothingItem ))
+    .then((clothingItem) => res.send(clothingItem))
     .catch((err) => {
       if (err.name === "ValidationError") {
-        res.status(BAD_REQUEST).send({ message: err.message });
+        next(new BadRequestError(err.message));
       } else {
-        res
-          .status(INTERNAL_SERVER_ERROR)
-          .send({ message: "An error has occured on the server." });
+        next(err);
       }
     });
 };
 
 // DELETE /items/:id
-module.exports.deleteClothingItem = (req, res) => {
+module.exports.deleteClothingItem = (req, res, next) => {
   const { id } = req.params;
   const userId = req.user._id;
 
   ClothingItem.findById(id)
     .then((item) => {
       if (!item) {
-        return res.status(NOT_FOUND).send({ message: "Item not found" });
+        next(new NotFoundError("Item not found!"));
       }
 
       // check ownership of item
       if (item.owner.toString() !== userId) {
-        return res
-          .status(FORBIDDEN)
-          .send({ message: "You are not authorized to delete this item" });
+        next(new ForbiddenError("You are not authorized to delete this item"));
       }
 
       // if the user owns the item, delete it
       return ClothingItem.deleteOne({ _id: id }).then(() => {
-        res.status(SUCCESS).send({ message: "Item successfully deleted" });
+        res.status(200).send({ message: "Item successfully deleted" });
       });
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid ID format" });
+        next(new BadRequestError("Invalid ID format"));
+      } else {
+        next(err);
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 
 // PUT /items/:itemId/likes — like an item
-module.exports.likeItem = (req, res) => {
+module.exports.likeItem = (req, res, next) => {
   ClothingItem.findByIdAndUpdate(
     req.params.id,
     { $addToSet: { likes: req.user._id } },
@@ -79,22 +67,21 @@ module.exports.likeItem = (req, res) => {
   )
     .then((updatedItem) => {
       if (!updatedItem) {
-        return res.status(NOT_FOUND).send({ message: "Item not found" });
+        next(new NotFoundError("Item not found"));
       }
-      return res.send(updatedItem );
+      return res.send(updatedItem);
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid ID format" });
+        next(new BadRequestError("Invalid ID format"));
+      } else {
+        next(err);
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
     });
 };
 
 // DELETE /items/:itemId/likes — unlike an item
-module.exports.dislikeItem = (req, res) => {
+module.exports.dislikeItem = (req, res, next) => {
   ClothingItem.findByIdAndUpdate(
     req.params.id,
     { $pull: { likes: req.user._id } },
@@ -102,16 +89,15 @@ module.exports.dislikeItem = (req, res) => {
   )
     .then((updatedItem) => {
       if (!updatedItem) {
-        return res.status(NOT_FOUND).send({ message: "Item not found" });
+        next(new NotFoundError("Item not found"));
       }
       return res.send(updatedItem);
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: err.message });
+        next(new BadRequestError(err.message));
+      } else {
+        next(err);
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
     });
 };

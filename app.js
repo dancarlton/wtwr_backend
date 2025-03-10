@@ -1,7 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const routes = require("./routes")
+const routes = require("./routes");
+const errorHandler = require("./middlewares/error-handler");
 
 const { PORT = 3001 } = process.env;
 const { NOT_FOUND } = require("./utils/errors");
@@ -23,6 +24,8 @@ app.use(express.json());
 
 // routes
 app.use(routes);
+
+app.use(errorHandler);
 
 // handle invalid routes
 app.use((req, res) => {

@@ -26,5 +26,13 @@
     "eslint-plugin-import": "^2.31.0",
     "nodemon": "^3.1.7",
     "prettier": "^2.8.8"
+  },
+  "rules": {
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "next"
+      }
+    ]
   }
 }
