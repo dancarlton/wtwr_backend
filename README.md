@@ -1,6 +1,9 @@
 # WTWR (What to Wear?): Back End
 The WTWR (What to Wear?) back-end provides an API for managing clothing items and user accounts, including authentication and authorization.
 
+## Domain Name
+dan12345.hardsoft.nu
+
 Features:
 - RESTful API for CRUD operations.
 - User authentication with secure password hashing.
