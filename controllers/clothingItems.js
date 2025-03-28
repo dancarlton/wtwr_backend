@@ -36,12 +36,12 @@ module.exports.deleteClothingItem = (req, res, next) => {
   ClothingItem.findById(id)
     .then((item) => {
       if (!item) {
-        next(new NotFoundError("Item not found!"));
+        return next(new NotFoundError("Item not found!"));
       }
 
       // check ownership of item
       if (item.owner.toString() !== userId) {
-        next(new ForbiddenError("You are not authorized to delete this item"));
+        return next(new ForbiddenError("You are not authorized to delete this item"));
       }
 
       // if the user owns the item, delete it
@@ -67,7 +67,7 @@ module.exports.likeItem = (req, res, next) => {
   )
     .then((updatedItem) => {
       if (!updatedItem) {
-        next(new NotFoundError("Item not found"));
+        return next(new NotFoundError("Item not found"));
       }
       return res.send(updatedItem);
     })
@@ -89,7 +89,7 @@ module.exports.dislikeItem = (req, res, next) => {
   )
     .then((updatedItem) => {
       if (!updatedItem) {
-        next(new NotFoundError("Item not found"));
+       return next(new NotFoundError("Item not found"));
       }
       return res.send(updatedItem);
     })

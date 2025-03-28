@@ -36,17 +36,18 @@ app.get('/crash-test', () => {
 // routes
 app.use(routes);
 
+// handle invalid routes
+app.use((req, res) => {
+  res.status(NOT_FOUND).send({ message: "Requested resource not found" });
+});
+
 app.use(errorLogger);
+
 // celebrate error handler
 app.use(errors());
 
 // our centralized handler
 app.use(errorHandler);
-
-// handle invalid routes
-app.use((req, res) => {
-  res.status(NOT_FOUND).send({ message: "Requested resource not found" });
-});
 
 // launch server
 app.listen(PORT, () => {
