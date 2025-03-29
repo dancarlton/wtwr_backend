@@ -9,8 +9,8 @@ const errorHandler = require("./middlewares/error-handler");
 const { requestLogger, errorLogger } = require("./middlewares/logger");
 
 const { PORT = 3001 } = process.env;
-const { NOT_FOUND } = require("./utils/errors");
 const limiter = require( './middlewares/rate-limiter' );
+const NotFoundError = require( './errors/NotFound' );
 
 // initialize express app
 const app = express();
@@ -43,8 +43,8 @@ app.get('/crash-test', () => {
 app.use(routes);
 
 // handle invalid routes
-app.use((req, res) => {
-  res.status(NOT_FOUND).send({ message: "Requested resource not found" });
+app.use((req, res, next) => {
+  next(new NotFoundError('Requested resource not found'));
 });
 
 app.use(errorLogger);
