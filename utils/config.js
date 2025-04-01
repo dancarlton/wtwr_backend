@@ -1,6 +1,7 @@
 require('dotenv').config();
 
-const { JWT_SECRET = "b48e672e64ce6c531f185f2289ee76f99a082f09956e0ee6a8ebcbab80de1707" } = process.env;
+const { JWT_SECRET = "some key" } = process.env;
+// const JWT_SECRET = process.env.NODE_ENV === 'production' ? process.env.JWT_SECRET : "some key"
 
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET is not defined in environment variables');
